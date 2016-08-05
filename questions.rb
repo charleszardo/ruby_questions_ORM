@@ -122,6 +122,10 @@ class Question
   def replies
     Reply.find_by_question_id(@id)
   end
+
+  def followers
+    QuestionFollow.followers_for_question_id(@id)
+  end
 end
 
 class QuestionFollow
@@ -308,5 +312,5 @@ class QuestionLike
   end
 end
 
-x = User.all.first
-p x.followed_questions
+x = Question.all.last
+p x.followers
