@@ -160,6 +160,25 @@ class QuestionFollow
     users.map { |user| User.new(user) }
   end
 
+  def self.followed_questions_for_user_id(user_id)
+    questions = QuestionDBConnection.instance.execute(<<-SQL, user_id)
+      SELECT
+        questions.*
+      FROM
+        question_follows
+      JOIN
+        questions
+      ON
+        questions.id = question_follows.question_id
+      WHERE
+        question_follows.user_id = ?
+    SQL
+    
+    return nil unless questions.length > 0
+
+    questions.map { |question| Question.new(question) }
+  end
+
   def initialize(options)
     @id = options['id']
     @user_id = options['user_id']
@@ -286,4 +305,4 @@ class QuestionLike
 end
 
 x = QuestionFollow.all
-p QuestionFollow.followers_for_question_id(3)
+p QuestionFollow.followed_questions_for_user_id(1)
