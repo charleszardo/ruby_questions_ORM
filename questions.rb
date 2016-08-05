@@ -67,7 +67,7 @@ end
 
 class Question
   attr_accessor :title, :body
-  attr_reader :author_id
+  attr_reader :id, :author_id
 
   def self.all
     data = QuestionDBConnection.instance.execute("SELECT * FROM questions")
@@ -109,6 +109,14 @@ class Question
     @title = options['title']
     @body = options['body']
     @author_id = options['author_id']
+  end
+
+  def author
+    User.find_by_id(@author_id)
+  end
+
+  def replies
+    Reply.find_by_question_id(@id)
   end
 end
 
@@ -200,6 +208,10 @@ class Reply
     @parent_reply_id = options['parent_reply_id']
     @user_id = options['user_id']
   end
+
+  def author
+    User.find_by_id(@user_id)
+  end
 end
 
 class QuestionLike
@@ -230,5 +242,5 @@ class QuestionLike
   end
 end
 
-x = User.all.last
-p x.authored_replies
+x = Reply.all.first
+p x.author
