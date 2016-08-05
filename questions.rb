@@ -63,6 +63,10 @@ class User
   def authored_replies
     Reply.find_by_user_id(@id)
   end
+
+  def followed_questions
+    QuestionFollow.followed_questions_for_user_id(@id)
+  end
 end
 
 class Question
@@ -173,7 +177,7 @@ class QuestionFollow
       WHERE
         question_follows.user_id = ?
     SQL
-    
+
     return nil unless questions.length > 0
 
     questions.map { |question| Question.new(question) }
@@ -304,5 +308,5 @@ class QuestionLike
   end
 end
 
-x = QuestionFollow.all
-p QuestionFollow.followed_questions_for_user_id(1)
+x = User.all.first
+p x.followed_questions
