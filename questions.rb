@@ -19,6 +19,21 @@ class User
     data.map { |datum| User.new(datum) }
   end
 
+  def self.find_by_id(id)
+    user = QuestionDBConnection.instance.execute(<<-SQL, id)
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        id = ?
+    SQL
+
+    return nil unless user.length > 0
+
+    User.new(user.first)
+  end
+
   def initialize(options)
     @id = options['id']
     @fname = options['fname']
@@ -39,3 +54,4 @@ class QuestionLike
 end
 
 p User.all
+p User.find_by_id(1)
