@@ -11,14 +11,30 @@ class QuestionDBConnection < SQLite3::Database
   end
 end
 
-class User
-  attr_accessor :fname, :lname
-  attr_reader :id
+class ModelBase
+  def self.get_model_name
+    model_name = self.name.split(/(?=[A-Z])/).map { |word| word.downcase }
+    model_name.join("_") + "s"
+  end
 
   def self.all
-    data = QuestionDBConnection.instance.execute("SELECT * FROM users")
-    data.map { |datum| User.new(datum) }
+    model_name = self.get_model_name
+    query = <<-SQL
+      SELECT
+        *
+      FROM
+        #{model_name}
+    SQL
+
+    data = QuestionDBConnection.instance.execute(query)
+
+    data.map { |datum| self.new(datum) }
   end
+end
+
+class User < ModelBase
+  attr_accessor :fname, :lname
+  attr_reader :id
 
   def self.find_by_id(id)
     user = QuestionDBConnection.instance.execute(<<-SQL, id)
@@ -73,14 +89,9 @@ class User
   end
 end
 
-class Question
+class Question < ModelBase
   attr_accessor :title, :body
   attr_reader :id, :author_id
-
-  def self.all
-    data = QuestionDBConnection.instance.execute("SELECT * FROM questions")
-    data.map { |datum| Question.new(datum) }
-  end
 
   def self.find_by_id(id)
     question = QuestionDBConnection.instance.execute(<<-SQL, id)
@@ -144,12 +155,7 @@ class Question
   end
 end
 
-class QuestionFollow
-  def self.all
-    data = QuestionDBConnection.instance.execute("SELECT * FROM question_follows")
-    data.map { |datum| QuestionFollow.new(datum) }
-  end
-
+class QuestionFollow < ModelBase
   def self.find_by_id(id)
     question_follow = QuestionDBConnection.instance.execute(<<-SQL, id)
       SELECT
@@ -233,13 +239,12 @@ class QuestionFollow
   end
 end
 
-class Reply
+class Reply < ModelBase
   attr_accessor :body
   attr_reader :id, :question_id, :parent_reply_id
 
-  def self.all
-    data = QuestionDBConnection.instance.execute("SELECT * FROM replies")
-    data.map { |datum| Reply.new(datum) }
+  def self.get_model_name
+    "replies"
   end
 
   def self.find_by_id(id)
@@ -324,11 +329,6 @@ class Reply
 end
 
 class QuestionLike
-  def self.all
-    data = QuestionDBConnection.instance.execute("SELECT * FROM question_likes")
-    data.map { |datum| QuestionLike.new(datum) }
-  end
-
   def self.find_by_id(id)
     question_like = QuestionDBConnection.instance.execute(<<-SQL, id)
       SELECT
@@ -402,6 +402,8 @@ class QuestionLike
   end
 end
 
-x = User.all.first
-
-p x.liked_questions
+p User.all
+p Question.all
+p QuestionFollow.all
+p Reply.all
+p QuestionLike.all
