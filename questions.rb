@@ -46,6 +46,43 @@ class ModelBase
 
     self.new(item.first)
   end
+
+  def get_column_names
+    vars = self.instance_variables.map { |var| var[1..-1]}
+    vars.shift
+    "(#{vars.join(",")})"
+  end
+
+  def get_instance_variable_values
+    vars = self.instance_variables.map { |var| var[1..-1]}
+    vars.shift
+    vars.map {|var| self.send(var)}
+  end
+
+  def get_values_string
+    vars = self.instance_variables.map { |var| var[1..-1]}
+    vars.shift
+    question_marks = Array.new(vars.length) { "?" }.join(",")
+    "(#{question_marks})"
+  end
+
+  def save
+    return unless @id.nil?
+
+    vars = get_instance_variable_values
+    model_name = self.class.get_model_name
+    columns = get_column_names
+    values = get_values_string
+
+    QuestionDBConnection.instance.execute(<<-SQL, *vars)
+    INSERT INTO
+      #{model_name} #{columns}
+    VALUES
+      #{values}
+    SQL
+
+    @id = QuestionDBConnection.instance.last_insert_row_id
+  end
 end
 
 class User < ModelBase
@@ -344,8 +381,9 @@ class QuestionLike < ModelBase
   end
 end
 
-p User.find_by_id(1)
-p Question.find_by_id(1)
-p QuestionFollow.find_by_id(1)
-p Reply.find_by_id(1)
-p QuestionLike.find_by_id(1)
+p Question.all.count
+x = Question.all.first
+x.title = 'YES IT WORKED!!'
+x.save
+
+p Question.all.count
