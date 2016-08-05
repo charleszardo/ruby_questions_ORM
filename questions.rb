@@ -13,6 +13,7 @@ end
 
 class User
   attr_accessor :fname, :lname
+  attr_reader :id
 
   def self.all
     data = QuestionDBConnection.instance.execute("SELECT * FROM users")
@@ -34,10 +35,33 @@ class User
     User.new(user.first)
   end
 
+  def self.find_by_name(fname, lname)
+    user = QuestionDBConnection.instance.execute(<<-SQL, fname, lname)
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        fname = ? AND lname = ?
+    SQL
+
+    return nil unless user.length > 0
+
+    User.new(user.first)
+  end
+
   def initialize(options)
     @id = options['id']
     @fname = options['fname']
     @lname = options['lname']
+  end
+
+  def authored_questions
+    Question.find_by_author_id(@id)
+  end
+
+  def authored_replies
+    Reply.find_by_user_id(@id)
   end
 end
 
@@ -206,8 +230,5 @@ class QuestionLike
   end
 end
 
-p Reply.find_by_question_id(1)
-
-p Reply.find_by_question_id(2)
-
-p Reply.find_by_question_id(3)
+x = User.all.last
+p x.authored_replies
