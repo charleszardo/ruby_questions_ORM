@@ -150,6 +150,7 @@ end
 
 class Reply
   attr_accessor :body
+  attr_reader :id, :question_id, :parent_reply_id
 
   def self.all
     data = QuestionDBConnection.instance.execute("SELECT * FROM replies")
@@ -212,6 +213,29 @@ class Reply
   def author
     User.find_by_id(@user_id)
   end
+
+  def question
+    Question.find_by_id(@question_id)
+  end
+
+  def parent_reply
+    Reply.find_by_id(@parent_reply_id)
+  end
+
+  def child_replies
+    replies = QuestionDBConnection.instance.execute(<<-SQL)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        parent_reply_id = #{@id}
+    SQL
+
+    return nil unless replies.length > 0
+
+    replies.map { |reply| Reply.new(reply) }
+  end
 end
 
 class QuestionLike
@@ -242,5 +266,5 @@ class QuestionLike
   end
 end
 
-x = Reply.all.first
-p x.author
+x = Reply.all.last
+p x.child_replies
