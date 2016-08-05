@@ -10,3 +10,19 @@ class QuestionDBConnection < SQLite3::Database
     self.results_as_hash = true
   end
 end
+
+class User
+end
+
+class Question
+
+end
+
+class QuestionFollow
+end
+
+class Reply
+end
+
+class QuestionLike
+end
