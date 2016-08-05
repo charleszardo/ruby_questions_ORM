@@ -67,6 +67,10 @@ class User
   def followed_questions
     QuestionFollow.followed_questions_for_user_id(@id)
   end
+
+  def liked_questions
+    QuestionLike.liked_questions_for_user_id(@id)
+  end
 end
 
 class Question
@@ -129,6 +133,14 @@ class Question
 
   def followers
     QuestionFollow.followers_for_question_id(@id)
+  end
+
+  def likers
+    QuestionLike.likers_for_question_id(@id)
+  end
+
+  def num_likes
+    QuestionLike.num_likes_for_question_id(@id)
   end
 end
 
@@ -364,6 +376,25 @@ class QuestionLike
     return likes.first["num"]
   end
 
+  def self.liked_questions_for_user_id(user_id)
+    questions = QuestionDBConnection.instance.execute(<<-SQL, user_id)
+      SELECT
+        questions.*
+      FROM
+        questions
+      JOIN
+        question_likes
+      ON
+        questions.id = question_likes.question_id
+      WHERE
+        question_likes.user_id = ?
+    SQL
+
+    return nil unless questions.length > 0
+
+    questions.map { |question| Question.new(question)}
+  end
+
   def initialize(options)
     @id = options['id']
     @question_id = options['question_id']
@@ -371,4 +402,6 @@ class QuestionLike
   end
 end
 
-p QuestionLike.num_likes_for_question_id(3)
+x = User.all.first
+
+p x.liked_questions
