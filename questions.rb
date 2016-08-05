@@ -108,6 +108,10 @@ class Question
     questions.map { |question| Question.new(question) }
   end
 
+  def self.most_followed(n)
+    QuestionFollow.most_followed_questions(n)
+  end
+
   def initialize(options)
     @id = options['id']
     @title = options['title']
@@ -185,6 +189,29 @@ class QuestionFollow
     return nil unless questions.length > 0
 
     questions.map { |question| Question.new(question) }
+  end
+
+  def self.most_followed_questions(n)
+    question_ids = QuestionDBConnection.instance.execute(<<-SQL, n)
+      SELECT
+        questions.id
+      FROM
+        questions
+      JOIN
+        question_follows
+      ON
+        questions.id = question_follows.question_id
+      GROUP BY
+        questions.id
+      ORDER BY
+        COUNT(question_follows.id) DESC
+      LIMIT
+        ?
+    SQL
+
+    return nil unless question_ids.length > 0
+
+    question_ids.map { |id_obj| Question.find_by_id(id_obj['id']) }
   end
 
   def initialize(options)
@@ -311,6 +338,3 @@ class QuestionLike
     @user_id = options['user_id']
   end
 end
-
-x = Question.all.last
-p x.followers
