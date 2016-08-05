@@ -19,37 +19,38 @@ class ModelBase
 
   def self.all
     model_name = self.get_model_name
-    query = <<-SQL
+
+    data = QuestionDBConnection.instance.execute(<<-SQL)
       SELECT
         *
       FROM
         #{model_name}
     SQL
 
-    data = QuestionDBConnection.instance.execute(query)
-
     data.map { |datum| self.new(datum) }
+  end
+
+  def self.find_by_id(id)
+    model_name = self.get_model_name
+
+    item = QuestionDBConnection.instance.execute(<<-SQL, id)
+      SELECT
+        *
+      FROM
+        #{model_name}
+      WHERE
+        id = ?
+    SQL
+
+    return nil unless item.length > 0
+
+    self.new(item.first)
   end
 end
 
 class User < ModelBase
   attr_accessor :fname, :lname
   attr_reader :id
-
-  def self.find_by_id(id)
-    user = QuestionDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        users
-      WHERE
-        id = ?
-    SQL
-
-    return nil unless user.length > 0
-
-    User.new(user.first)
-  end
 
   def self.find_by_name(fname, lname)
     user = QuestionDBConnection.instance.execute(<<-SQL, fname, lname)
@@ -92,21 +93,6 @@ end
 class Question < ModelBase
   attr_accessor :title, :body
   attr_reader :id, :author_id
-
-  def self.find_by_id(id)
-    question = QuestionDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        questions
-      WHERE
-        id = ?
-    SQL
-
-    return nil unless question.length > 0
-
-    Question.new(question.first)
-  end
 
   def self.find_by_author_id(author_id)
     questions = QuestionDBConnection.instance.execute(<<-SQL, author_id)
@@ -156,20 +142,6 @@ class Question < ModelBase
 end
 
 class QuestionFollow < ModelBase
-  def self.find_by_id(id)
-    question_follow = QuestionDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        question_follows
-      WHERE
-        id = ?
-    SQL
-
-    return nil unless question_follow.length > 0
-
-    QuestionFollow.new(question_follow.first)
-  end
 
   def self.followers_for_question_id(question_id)
     users = QuestionDBConnection.instance.execute(<<-SQL, question_id)
@@ -247,21 +219,6 @@ class Reply < ModelBase
     "replies"
   end
 
-  def self.find_by_id(id)
-    reply = QuestionDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        replies
-      WHERE
-        id = ?
-    SQL
-
-    return nil unless reply.length > 0
-
-    Reply.new(reply.first)
-  end
-
   def self.find_by_user_id(user_id)
     replies = QuestionDBConnection.instance.execute(<<-SQL, user_id)
       SELECT
@@ -328,22 +285,7 @@ class Reply < ModelBase
   end
 end
 
-class QuestionLike
-  def self.find_by_id(id)
-    question_like = QuestionDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        question_likes
-      WHERE
-        id = ?
-    SQL
-
-    return nil unless question_like.length > 0
-
-    QuestionLike.new(question_like.first)
-  end
-
+class QuestionLike < ModelBase
   def self.likers_for_question_id(question_id)
     likers = QuestionDBConnection.instance.execute(<<-SQL, question_id)
       SELECT
@@ -402,8 +344,8 @@ class QuestionLike
   end
 end
 
-p User.all
-p Question.all
-p QuestionFollow.all
-p Reply.all
-p QuestionLike.all
+p User.find_by_id(1)
+p Question.find_by_id(1)
+p QuestionFollow.find_by_id(1)
+p Reply.find_by_id(1)
+p QuestionLike.find_by_id(1)
