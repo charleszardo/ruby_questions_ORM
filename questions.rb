@@ -141,6 +141,25 @@ class QuestionFollow
     QuestionFollow.new(question_follow.first)
   end
 
+  def self.followers_for_question_id(question_id)
+    users = QuestionDBConnection.instance.execute(<<-SQL, question_id)
+      SELECT
+        *
+      FROM
+        users
+      JOIN
+        question_follows
+      ON
+        users.id = question_follows.user_id
+      WHERE
+        question_follows.question_id = ?
+    SQL
+
+    return nil unless users.length > 0
+
+    users.map { |user| User.new(user) }
+  end
+
   def initialize(options)
     @id = options['id']
     @user_id = options['user_id']
@@ -266,5 +285,5 @@ class QuestionLike
   end
 end
 
-x = Reply.all.last
-p x.child_replies
+x = QuestionFollow.all
+p QuestionFollow.followers_for_question_id(3)
