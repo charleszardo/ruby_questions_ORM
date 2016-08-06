@@ -374,6 +374,27 @@ class QuestionLike < ModelBase
     questions.map { |question| Question.new(question)}
   end
 
+  def self.most_liked_questions(n)
+    questions = QuestionDBConnection.instance.execute(<<-SQL, n)
+      SELECT
+        questions.*
+      FROM
+        questions
+      JOIN
+        question_likes
+      ON
+        questions.id = question_likes.question_id
+      GROUP BY
+        questions.id
+      LIMIT
+        ?
+    SQL
+
+    return nil unless questions.length > 0
+
+    questions.map { |question| Question.new(question)}
+  end
+
   def initialize(options)
     @id = options['id']
     @question_id = options['question_id']
@@ -381,9 +402,4 @@ class QuestionLike < ModelBase
   end
 end
 
-p Question.all.count
-x = Question.all.first
-x.title = 'YES IT WORKED!!'
-x.save
-
-p Question.all.count
+p QuestionLike.most_liked_questions(3)
