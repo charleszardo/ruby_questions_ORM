@@ -50,7 +50,19 @@ class ModelBase
   def get_column_names
     vars = self.instance_variables.map { |var| var[1..-1]}
     vars.shift
-    "(#{vars.join(",")})"
+    vars
+  end
+
+  def format_columns_for_insert(columns)
+    "(#{columns.join(",")})"
+  end
+
+  def format_values_for_update(_columns)
+    columns = _columns.map do |col|
+      "#{col}='#{self.send(col)}'"
+    end
+
+    columns.join(",")
   end
 
   def get_instance_variable_values
@@ -67,20 +79,35 @@ class ModelBase
   end
 
   def save
-    # return unless @id.nil?
     vars = get_instance_variable_values
     model_name = self.class.get_model_name
     columns = get_column_names
     values = get_values_string
 
-    QuestionDBConnection.instance.execute(<<-SQL, *vars)
-    INSERT INTO
-      #{model_name} #{columns}
-    VALUES
-      #{values}
-    SQL
+    if @id.nil?
+      columns = format_columns_for_insert(columns)
+      QuestionDBConnection.instance.execute(<<-SQL, *vars)
+      INSERT INTO
+        #{model_name} #{columns}
+      VALUES
+        #{values}
+      SQL
 
-    @id = QuestionDBConnection.instance.last_insert_row_id
+      @id = QuestionDBConnection.instance.last_insert_row_id
+    else
+      set_vals = format_values_for_update(columns)
+
+      query = <<-SQL
+      UPDATE
+        #{model_name}
+      SET
+        #{set_vals}
+      WHERE
+        #{model_name}.id = ?
+      SQL
+
+      QuestionDBConnection.instance.execute(query, @id)
+    end
   end
 end
 
