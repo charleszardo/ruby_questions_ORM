@@ -79,35 +79,40 @@ class ModelBase
   end
 
   def save
-    vars = get_instance_variable_values
     model_name = self.class.get_model_name
     columns = get_column_names
+
+    @id.nil? ? create(columns, model_name) : update(columns, model_name)
+  end
+
+  def create(_columns, model_name)
+    vars = get_instance_variable_values
     values = get_values_string
+    columns = format_columns_for_insert(_columns)
 
-    if @id.nil?
-      columns = format_columns_for_insert(columns)
-      QuestionDBConnection.instance.execute(<<-SQL, *vars)
-      INSERT INTO
-        #{model_name} #{columns}
-      VALUES
-        #{values}
-      SQL
+    QuestionDBConnection.instance.execute(<<-SQL, *vars)
+    INSERT INTO
+      #{model_name} #{columns}
+    VALUES
+      #{values}
+    SQL
 
-      @id = QuestionDBConnection.instance.last_insert_row_id
-    else
-      set_vals = format_values_for_update(columns)
+    @id = QuestionDBConnection.instance.last_insert_row_id
+  end
 
-      query = <<-SQL
-      UPDATE
-        #{model_name}
-      SET
-        #{set_vals}
-      WHERE
-        #{model_name}.id = ?
-      SQL
+  def update(_columns, model_name)
+    set_vals = format_values_for_update(_columns)
 
-      QuestionDBConnection.instance.execute(query, @id)
-    end
+    query = <<-SQL
+    UPDATE
+      #{model_name}
+    SET
+      #{set_vals}
+    WHERE
+      #{model_name}.id = ?
+    SQL
+
+    QuestionDBConnection.instance.execute(query, @id)
   end
 end
 
