@@ -67,8 +67,7 @@ class ModelBase
   end
 
   def save
-    return unless @id.nil?
-
+    # return unless @id.nil?
     vars = get_instance_variable_values
     model_name = self.class.get_model_name
     columns = get_column_names
@@ -124,6 +123,23 @@ class User < ModelBase
 
   def liked_questions
     QuestionLike.liked_questions_for_user_id(@id)
+  end
+
+  def average_karma
+    karma = QuestionDBConnection.instance.execute(<<-SQL, @id)
+      SELECT
+        CAST(COUNT(question_likes.id) AS FLOAT) / COUNT(DISTINCT(questions.id)) as avg_karma
+      FROM
+        questions
+      LEFT OUTER JOIN
+        question_likes
+      ON
+        questions.id = question_likes.question_id
+      WHERE
+        questions.author_id = ?
+    SQL
+
+    karma.first["avg_karma"]
   end
 end
 
@@ -398,6 +414,8 @@ class QuestionLike < ModelBase
 
     questions.map { |question| Question.new(question)}
   end
+
+  attr_reader :question_id, :user_id
 
   def initialize(options)
     @id = options['id']
