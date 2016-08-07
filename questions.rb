@@ -47,6 +47,30 @@ class ModelBase
     self.new(item.first)
   end
 
+  def self.build_where_clause(cols_vals)
+    cvs = cols_vals.map do |cv|
+      "#{cv[0]}=#{cv[1]}"
+    end
+
+    cvs.join(" AND ")
+  end
+
+  def self.where(options)
+    model_name = self.get_model_name
+    where_clause = self.build_where_clause(options)
+    p where_clause
+    results = QuestionDBConnection.instance.execute(<<-SQL, where_clause)
+      SELECT
+        *
+      FROM
+        #{model_name}
+      WHERE
+        ?
+    SQL
+
+    p results
+  end
+
   def get_column_names
     vars = self.instance_variables.map { |var| var[1..-1]}
     vars.shift
@@ -455,3 +479,5 @@ class QuestionLike < ModelBase
     @user_id = options['user_id']
   end
 end
+
+User.where({fname: "HELLO", lname: "xyz"})
