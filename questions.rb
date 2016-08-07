@@ -49,7 +49,7 @@ class ModelBase
 
   def self.build_where_clause(cols_vals)
     cvs = cols_vals.map do |cv|
-      "#{cv[0]}=#{cv[1]}"
+      "#{cv[0]}='#{cv[1]}'"
     end
 
     cvs.join(" AND ")
@@ -58,17 +58,21 @@ class ModelBase
   def self.where(options)
     model_name = self.get_model_name
     where_clause = self.build_where_clause(options)
-    p where_clause
-    results = QuestionDBConnection.instance.execute(<<-SQL, where_clause)
+
+    query = <<-SQL
       SELECT
         *
       FROM
         #{model_name}
       WHERE
-        ?
+        #{where_clause}
     SQL
 
-    p results
+    results = QuestionDBConnection.instance.execute(query)
+
+    results.map do |result|
+      self.new(result)
+    end
   end
 
   def get_column_names
@@ -480,4 +484,4 @@ class QuestionLike < ModelBase
   end
 end
 
-User.where({fname: "HELLO", lname: "xyz"})
+p User.where({fname: "user1", lname: "xyz"})
