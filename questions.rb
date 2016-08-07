@@ -57,7 +57,15 @@ class ModelBase
 
   def self.where(options)
     model_name = self.get_model_name
-    where_clause = self.build_where_clause(options)
+
+    if options.class == Hash
+      where_clause = self.build_where_clause(options)
+    elsif options.class == String
+      where_clause = options
+    else
+      p "invalid input"
+      return
+    end
 
     query = <<-SQL
       SELECT
@@ -484,4 +492,4 @@ class QuestionLike < ModelBase
   end
 end
 
-p User.where({fname: "user1", lname: "xyz"})
+p User.where("fname='user1'")
