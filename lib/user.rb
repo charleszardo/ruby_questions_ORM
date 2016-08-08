@@ -53,6 +53,6 @@ class User < ModelBase
         questions.author_id = ?
     SQL
 
-    karma.first["avg_karma"] || 0
+    karma.first["avg_karma"] || 0.0
   end
 end
