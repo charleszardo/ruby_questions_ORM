@@ -1,4 +1,4 @@
-require_relative 'questions'
+require_relative 'question'
 
 class User < ModelBase
   attr_accessor :fname, :lname
