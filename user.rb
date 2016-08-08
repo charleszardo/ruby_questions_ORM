@@ -1,5 +1,3 @@
-require_relative 'question'
-
 class User < ModelBase
   attr_accessor :fname, :lname
   attr_reader :id
@@ -58,10 +56,3 @@ class User < ModelBase
     karma.first["avg_karma"]
   end
 end
-
-x = User.all.last
-x.authored_questions
-x.authored_replies
-x.followed_questions
-x.liked_questions
-x.average_karma
