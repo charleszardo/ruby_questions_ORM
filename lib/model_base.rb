@@ -147,7 +147,6 @@ class ModelBase
   end
 
   def create(_columns, model_name)
-    p "CREATING"
     vars = get_instance_variable_values
     values = get_values_string
     columns = format_columns_for_insert(_columns)
@@ -163,7 +162,6 @@ class ModelBase
   end
 
   def update(_columns, model_name)
-    p "UPDATING"
     set_vals = format_values_for_update(_columns)
 
     query = <<-SQL
@@ -179,14 +177,12 @@ class ModelBase
   end
 
   def delete
-    p User.all
     model_name = self.class.get_model_name
     QuestionDBConnection.instance.execute(<<-SQL, @id)
       DELETE FROM
         #{model_name}
       WHERE
-        id IS NULL
+        id = @id
     SQL
-    p User.all
   end
 end
