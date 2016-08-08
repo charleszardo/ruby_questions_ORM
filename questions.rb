@@ -12,6 +12,44 @@ class QuestionDBConnection < SQLite3::Database
 end
 
 class ModelBase
+  def self.method_missing(sym, *args, &block)
+    method_name = sym.to_s.split("_")
+    if method_name[0..1].join(" ") == "find by"
+      col_names = self.get_column_names_from_mm(method_name)
+      where_hash = self.build_where_hash(col_names, args)
+      self.where(where_hash)
+    else
+      super(sym, args, &block)
+    end
+  end
+
+  def self.get_column_names_from_mm(method_name)
+    # self.method_missing helper function
+    column_names = []
+
+    method_name[2..-1].map do |word|
+      if word == 'and'
+        # do nothing
+      elsif word == 'id'
+        column_names.last += "_id"
+      else
+        column_names << word
+      end
+    end
+
+    column_names
+  end
+
+  def self.build_where_hash(col_names, vals)
+    where_hash = {}
+
+    col_names.each_with_index do |name, idx|
+      where_hash[name] = vals[idx]
+    end
+
+    where_hash
+  end
+
   def self.get_model_name
     model_name = self.name.split(/(?=[A-Z])/).map { |word| word.downcase }
     model_name.join("_") + "s"
@@ -492,4 +530,4 @@ class QuestionLike < ModelBase
   end
 end
 
-p User.where("fname='user1'")
+p User.find_by_fname_and_lname('user1', 'xyz')
